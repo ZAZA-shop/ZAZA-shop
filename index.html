@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prodavnica ZAZA</title>
+<title>ZAZA SHOP</title>
 
 <style>
 body{
@@ -13,7 +13,6 @@ body{
     color:#5a4a42;
 }
 
-/* HEADER */
 header{
     background:#e8dfd3;
     padding:15px;
@@ -22,24 +21,11 @@ header{
     align-items:center;
     position:sticky;
     top:0;
-    z-index:10;
 }
 
-nav button{
-    border:none;
-    background:none;
-    margin:5px;
-    cursor:pointer;
-    font-weight:bold;
-    color:#5a4a42;
-}
-
-nav button:hover{color:#bfa37a}
-
-/* PRODUCTS */
 .products{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
     gap:15px;
     padding:20px;
 }
@@ -51,10 +37,7 @@ nav button:hover{color:#bfa37a}
     text-align:center;
     transition:.3s;
 }
-
-.product:hover{
-    transform:scale(1.03);
-}
+.product:hover{transform:scale(1.03)}
 
 button{
     background:#d6c3a3;
@@ -63,9 +46,7 @@ button{
     cursor:pointer;
     border-radius:5px;
 }
-button:hover{background:#bfa37a}
 
-/* CART */
 .cart{
     position:fixed;
     right:0;
@@ -74,11 +55,10 @@ button:hover{background:#bfa37a}
     height:100%;
     background:white;
     box-shadow:-3px 0 10px rgba(0,0,0,0.2);
-    padding:10px;
     transform:translateX(100%);
     transition:.3s;
+    padding:10px;
     overflow:auto;
-    z-index:20;
 }
 .cart.active{transform:translateX(0)}
 
@@ -88,18 +68,12 @@ button:hover{background:#bfa37a}
     font-size:14px;
 }
 
-.small{font-size:12px;opacity:0.7}
-
-/* CHECKOUT */
 input{
     width:95%;
     padding:8px;
     margin:5px 0;
-    border:1px solid #ccc;
-    border-radius:5px;
 }
 
-/* TOAST */
 .toast{
     position:fixed;
     bottom:20px;
@@ -107,8 +81,7 @@ input{
     transform:translateX(-50%);
     background:#5a4a42;
     color:white;
-    padding:10px 15px;
-    border-radius:5px;
+    padding:10px;
     display:none;
 }
 </style>
@@ -118,9 +91,7 @@ input{
 
 <header>
 <h2>🧵 ZAZA SHOP</h2>
-<nav>
 <button onclick="toggleCart()">🛒 (<span id="count">0</span>)</button>
-</nav>
 </header>
 
 <!-- PRODUCTS -->
@@ -133,7 +104,7 @@ input{
 </div>
 
 <div class="product">
-<h3>Jastuk ukrasni</h3>
+<h3>Jastuk dekor</h3>
 <p>20 KM</p>
 <button onclick="add('Jastuk',20)">Dodaj</button>
 </div>
@@ -144,21 +115,14 @@ input{
 <button onclick="add('Torbica',15)">Dodaj</button>
 </div>
 
-<div class="product">
-<h3>Set dekor</h3>
-<p>30 KM</p>
-<button onclick="add('Dekor set',30)">Dodaj</button>
-</div>
-
 </div>
 
 <!-- CART -->
 <div class="cart" id="cart">
+
 <h2>Korpa</h2>
 
 <div id="items"></div>
-
-<h3>Ukupno: <span id="total">0</span> KM</h3>
 
 <h3>Checkout</h3>
 
@@ -166,11 +130,13 @@ input{
 <input id="address" placeholder="Adresa">
 <input id="phone" placeholder="Telefon">
 
-<button onclick="order()">Pošalji narudžbu</button>
+<h3>Ukupno: <span id="total">0</span> KM</h3>
+
+<button onclick="order()">Naruči</button>
+
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast">Dodano u korpu</div>
+<div class="toast" id="toast">Dodano</div>
 
 <script>
 
@@ -184,13 +150,7 @@ function add(name,price){
     cart.push({name,price});
     save();
     update();
-    showToast();
-}
-
-function remove(i){
-    cart.splice(i,1);
-    save();
-    update();
+    toast();
 }
 
 function update(){
@@ -208,7 +168,6 @@ function update(){
         items.innerHTML += `
         <div class="item">
         ${c.name} - ${c.price} KM
-        <button onclick="remove(${i})">X</button>
         </div>`;
     });
 
@@ -219,29 +178,53 @@ function toggleCart(){
     document.getElementById("cart").classList.toggle("active");
 }
 
+function toast(){
+    let t = document.getElementById("toast");
+    t.style.display="block";
+    setTimeout(()=>t.style.display="none",1200);
+}
+
+/* 🔥 MAX ORDER SYSTEM */
 function order(){
+
+    if(cart.length === 0){
+        alert("Korpa je prazna!");
+        return;
+    }
 
     let name = document.getElementById("name").value;
     let address = document.getElementById("address").value;
     let phone = document.getElementById("phone").value;
 
-    let text = `Narudžba:%0D%0A`;
-    text += `Ime: ${name}%0D%0A`;
-    text += `Adresa: ${address}%0D%0A`;
-    text += `Telefon: ${phone}%0D%0A%0D%0A`;
+    let total = 0;
+    let msg = "🧵 ZAZA NARUDŽBA%0A%0A";
+
+    msg += "Ime: " + name + "%0A";
+    msg += "Adresa: " + address + "%0A";
+    msg += "Telefon: " + phone + "%0A%0A";
 
     cart.forEach(c=>{
-        text += `${c.name} - ${c.price} KM%0D%0A`;
+        msg += "- " + c.name + " (" + c.price + " KM)%0A";
+        total += c.price;
     });
 
-    window.location.href =
-    "mailto:zaza@email.com?subject=Nova narudžba&body=" + text;
-}
+    msg += "%0AUKUPNO: " + total + " KM";
 
-function showToast(){
-    let t = document.getElementById("toast");
-    t.style.display = "block";
-    setTimeout(()=>t.style.display="none",1500);
+    /* 📱 WHATSAPP */
+    let broj = "3876XXXXXXX"; // 🔴 TVOJ BROJ
+    window.open("https://wa.me/" + broj + "?text=" + msg, "_blank");
+
+    /* 📊 GOOGLE SHEETS (API) */
+    fetch("https://script.google.com/macros/s/YOUR_SCRIPT_URL/exec", {
+        method:"POST",
+        body:JSON.stringify({
+            name,address,phone,cart,total
+        })
+    });
+
+    cart = [];
+    save();
+    update();
 }
 
 update();
