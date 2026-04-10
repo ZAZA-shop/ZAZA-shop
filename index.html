@@ -6,100 +6,110 @@
 <title>Prodavnica ZAZA</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background-color: #f8f5f0;
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f8f5f0;
+    color:#5a4a42;
 }
 
 /* HEADER */
-header {
-    background-color: #e8dfd3;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+header{
+    background:#e8dfd3;
+    padding:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    position:sticky;
+    top:0;
+    z-index:10;
 }
 
-header h1 {
-    margin: 0;
-    color: #5a4a42;
+nav button{
+    border:none;
+    background:none;
+    margin:5px;
+    cursor:pointer;
+    font-weight:bold;
+    color:#5a4a42;
 }
 
-.cart {
-    cursor: pointer;
-}
+nav button:hover{color:#bfa37a}
 
 /* PRODUCTS */
-.container {
-    padding: 20px;
+.products{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    padding:20px;
 }
 
-.products {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
+.product{
+    background:white;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
+    transition:.3s;
 }
 
-.product {
-    background: white;
-    border-radius: 10px;
-    padding: 10px;
-    text-align: center;
-    transition: 0.3s;
+.product:hover{
+    transform:scale(1.03);
 }
 
-.product:hover {
-    transform: scale(1.05);
+button{
+    background:#d6c3a3;
+    border:none;
+    padding:8px;
+    cursor:pointer;
+    border-radius:5px;
+}
+button:hover{background:#bfa37a}
+
+/* CART */
+.cart{
+    position:fixed;
+    right:0;
+    top:0;
+    width:320px;
+    height:100%;
+    background:white;
+    box-shadow:-3px 0 10px rgba(0,0,0,0.2);
+    padding:10px;
+    transform:translateX(100%);
+    transition:.3s;
+    overflow:auto;
+    z-index:20;
+}
+.cart.active{transform:translateX(0)}
+
+.item{
+    border-bottom:1px solid #ddd;
+    padding:5px;
+    font-size:14px;
 }
 
-.product img {
-    width: 100%;
-    border-radius: 10px;
+.small{font-size:12px;opacity:0.7}
+
+/* CHECKOUT */
+input{
+    width:95%;
+    padding:8px;
+    margin:5px 0;
+    border:1px solid #ccc;
+    border-radius:5px;
 }
 
-/* BUTTON */
-button {
-    background-color: #d6c3a3;
-    border: none;
-    padding: 10px;
-    margin-top: 10px;
-    cursor: pointer;
-    border-radius: 5px;
-}
-
-button:hover {
-    background-color: #bfa37a;
-}
-
-/* CART POPUP */
-.cart-popup {
-    position: fixed;
-    right: -350px;
-    top: 0;
-    width: 300px;
-    height: 100%;
-    background: white;
-    box-shadow: -3px 0 10px rgba(0,0,0,0.2);
-    padding: 15px;
-    transition: 0.3s;
-}
-
-.cart-popup.active {
-    right: 0;
-}
-
-.cart-item {
-    border-bottom: 1px solid #ddd;
-    padding: 5px 0;
-}
-
-/* FOOTER */
-footer {
-    background-color: #e8dfd3;
-    text-align: center;
-    padding: 15px;
-    margin-top: 20px;
+/* TOAST */
+.toast{
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#5a4a42;
+    color:white;
+    padding:10px 15px;
+    border-radius:5px;
+    display:none;
 }
 </style>
 </head>
@@ -107,117 +117,135 @@ footer {
 <body>
 
 <header>
-    <h1>🧵 Prodavnica ZAZA</h1>
-    <div class="cart" onclick="toggleCart()">🛒 <span id="cart-count">0</span></div>
+<h2>🧵 ZAZA SHOP</h2>
+<nav>
+<button onclick="toggleCart()">🛒 (<span id="count">0</span>)</button>
+</nav>
 </header>
 
+<!-- PRODUCTS -->
+<div class="products">
+
+<div class="product">
+<h3>Torba handmade</h3>
+<p>25 KM</p>
+<button onclick="add('Torba',25)">Dodaj</button>
+</div>
+
+<div class="product">
+<h3>Jastuk ukrasni</h3>
+<p>20 KM</p>
+<button onclick="add('Jastuk',20)">Dodaj</button>
+</div>
+
+<div class="product">
+<h3>Torbica</h3>
+<p>15 KM</p>
+<button onclick="add('Torbica',15)">Dodaj</button>
+</div>
+
+<div class="product">
+<h3>Set dekor</h3>
+<p>30 KM</p>
+<button onclick="add('Dekor set',30)">Dodaj</button>
+</div>
+
+</div>
+
 <!-- CART -->
-<div class="cart-popup" id="cart">
-    <h2>Korpa</h2>
-    <div id="cart-items"></div>
-    <h3 id="total">Ukupno: 0 KM</h3>
-    <button onclick="order()">Naruči</button>
+<div class="cart" id="cart">
+<h2>Korpa</h2>
+
+<div id="items"></div>
+
+<h3>Ukupno: <span id="total">0</span> KM</h3>
+
+<h3>Checkout</h3>
+
+<input id="name" placeholder="Ime">
+<input id="address" placeholder="Adresa">
+<input id="phone" placeholder="Telefon">
+
+<button onclick="order()">Pošalji narudžbu</button>
 </div>
 
-<div class="container">
-    <div class="products">
-
-        <div class="product">
-            <img src="slika1.jpg">
-            <h3>Torba handmade</h3>
-            <p>25 KM</p>
-            <button onclick="addToCart('Torba handmade', 25)">Dodaj</button>
-        </div>
-
-        <div class="product">
-            <img src="slika2.jpg">
-            <h3>Jastuk ukrasni</h3>
-            <p>20 KM</p>
-            <button onclick="addToCart('Jastuk ukrasni', 20)">Dodaj</button>
-        </div>
-
-        <div class="product">
-            <img src="slika3.jpg">
-            <h3>Platnena torbica</h3>
-            <p>15 KM</p>
-            <button onclick="addToCart('Platnena torbica', 15)">Dodaj</button>
-        </div>
-
-        <div class="product">
-            <img src="slika4.jpg">
-            <h3>Set salveta</h3>
-            <p>18 KM</p>
-            <button onclick="addToCart('Set salveta', 18)">Dodaj</button>
-        </div>
-
-        <div class="product">
-            <img src="slika5.jpg">
-            <h3>Ručni rad dekor</h3>
-            <p>22 KM</p>
-            <button onclick="addToCart('Ručni rad dekor', 22)">Dodaj</button>
-        </div>
-
-        <div class="product">
-            <img src="slika6.jpg">
-            <h3>Mini torbica</h3>
-            <p>12 KM</p>
-            <button onclick="addToCart('Mini torbica', 12)">Dodaj</button>
-        </div>
-
-    </div>
-</div>
-
-<footer>
-    <p>Kontakt: zaza@email.com</p>
-    <p>Instagram: @zaza_handmade</p>
-</footer>
+<!-- TOAST -->
+<div class="toast" id="toast">Dodano u korpu</div>
 
 <script>
-let cart = [];
 
-function addToCart(name, price) {
-    cart.push({name, price});
-    updateCart();
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function save(){
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-function updateCart() {
-    let cartItems = document.getElementById("cart-items");
+function add(name,price){
+    cart.push({name,price});
+    save();
+    update();
+    showToast();
+}
+
+function remove(i){
+    cart.splice(i,1);
+    save();
+    update();
+}
+
+function update(){
+
+    document.getElementById("count").innerText = cart.length;
+
+    let items = document.getElementById("items");
+    items.innerHTML = "";
+
     let total = 0;
-    cartItems.innerHTML = "";
 
-    cart.forEach((item, index) => {
-        total += item.price;
+    cart.forEach((c,i)=>{
+        total += c.price;
 
-        cartItems.innerHTML += `
-            <div class="cart-item">
-                ${item.name} - ${item.price} KM
-                <button onclick="removeItem(${index})">X</button>
-            </div>
-        `;
+        items.innerHTML += `
+        <div class="item">
+        ${c.name} - ${c.price} KM
+        <button onclick="remove(${i})">X</button>
+        </div>`;
     });
 
-    document.getElementById("cart-count").innerText = cart.length;
-    document.getElementById("total").innerText = "Ukupno: " + total + " KM";
+    document.getElementById("total").innerText = total;
 }
 
-function removeItem(index) {
-    cart.splice(index, 1);
-    updateCart();
-}
-
-function toggleCart() {
+function toggleCart(){
     document.getElementById("cart").classList.toggle("active");
 }
 
-function order() {
-    let text = "Narudžba:%0D%0A";
+function order(){
 
-    cart.forEach(item => {
-        text += item.name + " - " + item.price + " KM%0D%0A";
+    let name = document.getElementById("name").value;
+    let address = document.getElementById("address").value;
+    let phone = document.getElementById("phone").value;
+
+    let text = `Narudžba:%0D%0A`;
+    text += `Ime: ${name}%0D%0A`;
+    text += `Adresa: ${address}%0D%0A`;
+    text += `Telefon: ${phone}%0D%0A%0D%0A`;
+
+    cart.forEach(c=>{
+        text += `${c.name} - ${c.price} KM%0D%0A`;
     });
 
-    window.location.href = "mailto:zaza@email.com?subject=Narudžba&body=" + text;
+    window.location.href =
+    "mailto:zaza@email.com?subject=Nova narudžba&body=" + text;
 }
+
+function showToast(){
+    let t = document.getElementById("toast");
+    t.style.display = "block";
+    setTimeout(()=>t.style.display="none",1500);
+}
+
+update();
+
 </script>
 
 </body>
