@@ -39,6 +39,14 @@ header{
 }
 .product:hover{transform:scale(1.03)}
 
+.product img{
+    width:100%;
+    height:200px;
+    object-fit:cover;
+    border-radius:10px;
+    margin-bottom:10px;
+}
+
 button{
     background:#d6c3a3;
     border:none;
@@ -98,18 +106,21 @@ input{
 <div class="products">
 
 <div class="product">
+<img src="torba.jpeg" alt="Torba handmade">
 <h3>Torba handmade</h3>
 <p>25 KM</p>
 <button onclick="add('Torba',25)">Dodaj</button>
 </div>
 
 <div class="product">
+<img src="neseser.jpeg" alt="Jastuk dekor">
 <h3>Jastuk dekor</h3>
 <p>20 KM</p>
 <button onclick="add('Jastuk',20)">Dodaj</button>
 </div>
 
 <div class="product">
+<img src="krpa.jpeg" alt="Torbica">
 <h3>Torbica</h3>
 <p>15 KM</p>
 <button onclick="add('Torbica',15)">Dodaj</button>
@@ -184,7 +195,6 @@ function toast(){
     setTimeout(()=>t.style.display="none",1200);
 }
 
-/* 🔥 MAX ORDER SYSTEM */
 function order(){
 
     if(cart.length === 0){
@@ -210,17 +220,8 @@ function order(){
 
     msg += "%0AUKUPNO: " + total + " KM";
 
-    /* 📱 WHATSAPP */
-    let broj = "3876XXXXXXX"; // 🔴 TVOJ BROJ
+    let broj = "3876XXXXXXX";
     window.open("https://wa.me/" + broj + "?text=" + msg, "_blank");
-
-    /* 📊 GOOGLE SHEETS (API) */
-    fetch("https://script.google.com/macros/s/YOUR_SCRIPT_URL/exec", {
-        method:"POST",
-        body:JSON.stringify({
-            name,address,phone,cart,total
-        })
-    });
 
     cart = [];
     save();
