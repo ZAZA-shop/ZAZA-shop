@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prodavnica ZAZA</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background-color: #f8f5f0;
+}
+
+/* HEADER */
+header {
+    background-color: #e8dfd3;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    color: #5a4a42;
+}
+
+.cart {
+    cursor: pointer;
+}
+
+/* PRODUCTS */
+.container {
+    padding: 20px;
+}
+
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.product {
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    transition: 0.3s;
+}
+
+.product:hover {
+    transform: scale(1.05);
+}
+
+.product img {
+    width: 100%;
+    border-radius: 10px;
+}
+
+/* BUTTON */
+button {
+    background-color: #d6c3a3;
+    border: none;
+    padding: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #bfa37a;
+}
+
+/* CART POPUP */
+.cart-popup {
+    position: fixed;
+    right: -350px;
+    top: 0;
+    width: 300px;
+    height: 100%;
+    background: white;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.2);
+    padding: 15px;
+    transition: 0.3s;
+}
+
+.cart-popup.active {
+    right: 0;
+}
+
+.cart-item {
+    border-bottom: 1px solid #ddd;
+    padding: 5px 0;
+}
+
+/* FOOTER */
+footer {
+    background-color: #e8dfd3;
+    text-align: center;
+    padding: 15px;
+    margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🧵 Prodavnica ZAZA</h1>
+    <div class="cart" onclick="toggleCart()">🛒 <span id="cart-count">0</span></div>
+</header>
+
+<!-- CART -->
+<div class="cart-popup" id="cart">
+    <h2>Korpa</h2>
+    <div id="cart-items"></div>
+    <h3 id="total">Ukupno: 0 KM</h3>
+    <button onclick="order()">Naruči</button>
+</div>
+
+<div class="container">
+    <div class="products">
+
+        <div class="product">
+            <img src="slika1.jpg">
+            <h3>Torba handmade</h3>
+            <p>25 KM</p>
+            <button onclick="addToCart('Torba handmade', 25)">Dodaj</button>
+        </div>
+
+        <div class="product">
+            <img src="slika2.jpg">
+            <h3>Jastuk ukrasni</h3>
+            <p>20 KM</p>
+            <button onclick="addToCart('Jastuk ukrasni', 20)">Dodaj</button>
+        </div>
+
+        <div class="product">
+            <img src="slika3.jpg">
+            <h3>Platnena torbica</h3>
+            <p>15 KM</p>
+            <button onclick="addToCart('Platnena torbica', 15)">Dodaj</button>
+        </div>
+
+        <div class="product">
+            <img src="slika4.jpg">
+            <h3>Set salveta</h3>
+            <p>18 KM</p>
+            <button onclick="addToCart('Set salveta', 18)">Dodaj</button>
+        </div>
+
+        <div class="product">
+            <img src="slika5.jpg">
+            <h3>Ručni rad dekor</h3>
+            <p>22 KM</p>
+            <button onclick="addToCart('Ručni rad dekor', 22)">Dodaj</button>
+        </div>
+
+        <div class="product">
+            <img src="slika6.jpg">
+            <h3>Mini torbica</h3>
+            <p>12 KM</p>
+            <button onclick="addToCart('Mini torbica', 12)">Dodaj</button>
+        </div>
+
+    </div>
+</div>
+
+<footer>
+    <p>Kontakt: zaza@email.com</p>
+    <p>Instagram: @zaza_handmade</p>
+</footer>
+
+<script>
+let cart = [];
+
+function addToCart(name, price) {
+    cart.push({name, price});
+    updateCart();
+}
+
+function updateCart() {
+    let cartItems = document.getElementById("cart-items");
+    let total = 0;
+    cartItems.innerHTML = "";
+
+    cart.forEach((item, index) => {
+        total += item.price;
+
+        cartItems.innerHTML += `
+            <div class="cart-item">
+                ${item.name} - ${item.price} KM
+                <button onclick="removeItem(${index})">X</button>
+            </div>
+        `;
+    });
+
+    document.getElementById("cart-count").innerText = cart.length;
+    document.getElementById("total").innerText = "Ukupno: " + total + " KM";
+}
+
+function removeItem(index) {
+    cart.splice(index, 1);
+    updateCart();
+}
+
+function toggleCart() {
+    document.getElementById("cart").classList.toggle("active");
+}
+
+function order() {
+    let text = "Narudžba:%0D%0A";
+
+    cart.forEach(item => {
+        text += item.name + " - " + item.price + " KM%0D%0A";
+    });
+
+    window.location.href = "mailto:zaza@email.com?subject=Narudžba&body=" + text;
+}
+</script>
+
+</body>
+</html>
