@@ -3,232 +3,200 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZAZA SHOP</title>
+<title>ZAZA Shop | Handmade</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#f8f5f0;
-    color:#5a4a42;
-}
-
-header{
-    background:#e8dfd3;
-    padding:15px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    position:sticky;
-    top:0;
-}
-
-.products{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:15px;
-    padding:20px;
-}
-
-.product{
-    background:white;
-    padding:10px;
-    border-radius:10px;
-    text-align:center;
-    transition:.3s;
-}
-.product:hover{transform:scale(1.03)}
-
-.product img{
-    width:100%;
-    height:200px;
-    object-fit:cover;
-    border-radius:10px;
-    margin-bottom:10px;
-}
-
-button{
-    background:#d6c3a3;
-    border:none;
-    padding:8px;
-    cursor:pointer;
-    border-radius:5px;
-}
-
-.cart{
-    position:fixed;
-    right:0;
-    top:0;
-    width:320px;
-    height:100%;
-    background:white;
-    box-shadow:-3px 0 10px rgba(0,0,0,0.2);
-    transform:translateX(100%);
-    transition:.3s;
-    padding:10px;
-    overflow:auto;
-}
+body{margin:0;font-family:Arial;background:#f8f5f0}
+header{background:#e8dfd3;padding:15px;display:flex;justify-content:space-between}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;padding:20px}
+.product{background:white;padding:10px;border-radius:10px;text-align:center}
+.product img{width:100%;height:200px;object-fit:cover}
+button{background:#d6c3a3;border:none;padding:6px;margin:3px;cursor:pointer}
+.cart{position:fixed;right:0;top:0;width:320px;height:100%;background:white;transform:translateX(100%);transition:.3s;padding:10px;overflow:auto}
 .cart.active{transform:translateX(0)}
-
-.item{
-    border-bottom:1px solid #ddd;
-    padding:5px;
-    font-size:14px;
-}
-
-input{
-    width:95%;
-    padding:8px;
-    margin:5px 0;
-}
-
-.toast{
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#5a4a42;
-    color:white;
-    padding:10px;
-    display:none;
-}
+.admin{background:white;padding:10px;margin:10px}
+input{width:95%;padding:8px;margin:5px 0}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>🧵 ZAZA SHOP</h2>
+<h2>ZAZA SHOP</h2>
+<div>
 <button onclick="toggleCart()">🛒 (<span id="count">0</span>)</button>
+<button onclick="toggleAdmin()">⚙️</button>
+</div>
 </header>
 
-<!-- PRODUCTS -->
-<div class="products">
+<div class="products" id="products"></div>
 
-<div class="product">
-<img src="torba.jpeg" alt="Torba handmade">
-<h3>Torba handmade</h3>
-<p>25 KM</p>
-<button onclick="add('Torba',25)">Dodaj</button>
-</div>
-
-<div class="product">
-<img src="neseser.jpeg" alt="Jastuk dekor">
-<h3>Jastuk dekor</h3>
-<p>20 KM</p>
-<button onclick="add('Jastuk',20)">Dodaj</button>
-</div>
-
-<div class="product">
-<img src="krpa.jpeg" alt="Torbica">
-<h3>Torbica</h3>
-<p>15 KM</p>
-<button onclick="add('Torbica',15)">Dodaj</button>
-</div>
-
-</div>
-
-<!-- CART -->
 <div class="cart" id="cart">
-
 <h2>Korpa</h2>
-
 <div id="items"></div>
-
-<h3>Checkout</h3>
+<h3>Ukupno: <span id="total">0</span> KM</h3>
 
 <input id="name" placeholder="Ime">
 <input id="address" placeholder="Adresa">
 <input id="phone" placeholder="Telefon">
 
-<h3>Ukupno: <span id="total">0</span> KM</h3>
-
 <button onclick="order()">Naruči</button>
-
 </div>
 
-<div class="toast" id="toast">Dodano</div>
+<div class="admin" id="admin" style="display:none;">
+<h3>Admin login</h3>
+<input id="email" placeholder="email">
+<input id="pass" placeholder="password">
+<button onclick="login()">Login</button>
 
-<script>
+<hr>
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+<h3>Dodaj proizvod</h3>
+<input id="pname" placeholder="Naziv">
+<input id="pprice" placeholder="Cijena">
+<input id="pimg" placeholder="Link slike">
+<button onclick="addProduct()">Dodaj</button>
+</div>
 
-function save(){
-    localStorage.setItem("cart", JSON.stringify(cart));
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// 🔴 OVDJE UBACI SVOJ FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "XXXX",
+  authDomain: "XXXX",
+  projectId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// ===== LOGIN =====
+window.login = async function(){
+    let email = emailInput.value;
+    let pass = passInput.value;
+
+    try{
+        await signInWithEmailAndPassword(auth,email,pass);
+        alert("Ulogovan si!");
+    }catch{
+        alert("Greška login");
+    }
 }
 
-function add(name,price){
-    cart.push({name,price});
-    save();
+// ===== PRODUCTS =====
+async function loadProducts(){
+    let data = await getDocs(collection(db,"products"));
+    products.innerHTML="";
+
+    data.forEach(doc=>{
+        let p = doc.data();
+
+        products.innerHTML += `
+        <div class="product">
+        <img src="${p.img}">
+        <h3>${p.name}</h3>
+        <p>${p.price} KM</p>
+        <button onclick="add('${p.name}',${p.price})">Dodaj</button>
+        </div>`;
+    });
+}
+
+window.addProduct = async function(){
+    let name = pname.value;
+    let price = parseFloat(pprice.value);
+    let img = pimg.value;
+
+    await addDoc(collection(db,"products"),{name,price,img});
+    alert("Dodano!");
+    loadProducts();
+}
+
+// ===== CART =====
+let cart = [];
+
+window.add = function(name,price){
+    let item = cart.find(x=>x.name===name);
+
+    if(item){ item.qty++; }
+    else{ cart.push({name,price,qty:1}); }
+
     update();
-    toast();
 }
 
 function update(){
-
-    document.getElementById("count").innerText = cart.length;
-
-    let items = document.getElementById("items");
-    items.innerHTML = "";
+    count.innerText = cart.length;
 
     let total = 0;
+    items.innerHTML="";
 
     cart.forEach((c,i)=>{
-        total += c.price;
+        total += c.price*c.qty;
 
         items.innerHTML += `
-        <div class="item">
-        ${c.name} - ${c.price} KM
+        <div>
+        ${c.name} (${c.qty})
+        <button onclick="change(${i},1)">+</button>
+        <button onclick="change(${i},-1)">-</button>
+        <button onclick="removeItem(${i})">X</button>
         </div>`;
     });
 
-    document.getElementById("total").innerText = total;
+    totalEl.innerText = total;
 }
 
-function toggleCart(){
-    document.getElementById("cart").classList.toggle("active");
-}
-
-function toast(){
-    let t = document.getElementById("toast");
-    t.style.display="block";
-    setTimeout(()=>t.style.display="none",1200);
-}
-
-function order(){
-
-    if(cart.length === 0){
-        alert("Korpa je prazna!");
-        return;
-    }
-
-    let name = document.getElementById("name").value;
-    let address = document.getElementById("address").value;
-    let phone = document.getElementById("phone").value;
-
-    let total = 0;
-    let msg = "🧵 ZAZA NARUDŽBA%0A%0A";
-
-    msg += "Ime: " + name + "%0A";
-    msg += "Adresa: " + address + "%0A";
-    msg += "Telefon: " + phone + "%0A%0A";
-
-    cart.forEach(c=>{
-        msg += "- " + c.name + " (" + c.price + " KM)%0A";
-        total += c.price;
-    });
-
-    msg += "%0AUKUPNO: " + total + " KM";
-
-    let broj = "38761440976";
-    window.open("https://wa.me/" + broj + "?text=" + msg, "_blank");
-
-    cart = [];
-    save();
+window.change = function(i,d){
+    cart[i].qty += d;
+    if(cart[i].qty<=0) cart.splice(i,1);
     update();
 }
 
-update();
+window.removeItem = function(i){
+    cart.splice(i,1);
+    update();
+}
+
+window.toggleCart = function(){
+    cartDiv.classList.toggle("active");
+}
+
+window.toggleAdmin = function(){
+    admin.style.display = admin.style.display==="none"?"block":"none";
+}
+
+// ===== ORDER =====
+window.order = async function(){
+
+    let name = nameInput.value;
+    let address = addressInput.value;
+    let phone = phoneInput.value;
+
+    let total = 0;
+    let msg = "ZAZA NARUDŽBA%0A";
+
+    cart.forEach(c=>{
+        msg += c.name+" x"+c.qty+"%0A";
+        total += c.price*c.qty;
+    });
+
+    // FIREBASE SAVE
+    await addDoc(collection(db,"orders"),{
+        name,address,phone,cart,total
+    });
+
+    // WHATSAPP
+    window.open("https://wa.me/3876XXXXXXX?text="+msg);
+
+    cart=[];
+    update();
+}
+
+// INIT
+loadProducts();
 
 </script>
 
