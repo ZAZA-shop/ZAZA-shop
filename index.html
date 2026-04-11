@@ -3,26 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZAZA Shop | Handmade</title>
+<title>ZAZA SHOP</title>
 
 <style>
 body{margin:0;font-family:Arial;background:#f8f5f0}
-header{background:#e8dfd3;padding:15px;display:flex;justify-content:space-between}
-.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;padding:20px}
-.product{background:white;padding:10px;border-radius:10px;text-align:center}
-.product img{width:100%;height:200px;object-fit:cover}
-button{background:#d6c3a3;border:none;padding:6px;margin:3px;cursor:pointer}
-.cart{position:fixed;right:0;top:0;width:320px;height:100%;background:white;transform:translateX(100%);transition:.3s;padding:10px;overflow:auto}
+
+header{
+background:#e8dfd3;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:15px;
+padding:20px;
+}
+
+.product{
+background:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
+}
+
+.product img{
+width:100%;
+height:200px;
+object-fit:cover;
+border-radius:10px;
+}
+
+button{
+background:#d6c3a3;
+border:none;
+padding:6px;
+margin:3px;
+cursor:pointer;
+}
+
+.cart{
+position:fixed;
+right:0;
+top:0;
+width:320px;
+height:100%;
+background:white;
+transform:translateX(100%);
+transition:.3s;
+padding:10px;
+overflow:auto;
+}
+
 .cart.active{transform:translateX(0)}
-.admin{background:white;padding:10px;margin:10px}
-input{width:95%;padding:8px;margin:5px 0}
+
+.admin{
+background:white;
+padding:10px;
+margin:10px;
+display:none;
+}
+
+input{
+width:95%;
+padding:8px;
+margin:5px 0;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-<h2>ZAZA SHOP</h2>
+<h2>🧵 ZAZA SHOP</h2>
 <div>
 <button onclick="toggleCart()">🛒 (<span id="count">0</span>)</button>
 <button onclick="toggleAdmin()">⚙️</button>
@@ -34,19 +90,20 @@ input{width:95%;padding:8px;margin:5px 0}
 <div class="cart" id="cart">
 <h2>Korpa</h2>
 <div id="items"></div>
+
 <h3>Ukupno: <span id="total">0</span> KM</h3>
 
 <input id="name" placeholder="Ime">
 <input id="address" placeholder="Adresa">
 <input id="phone" placeholder="Telefon">
 
-<button onclick="order()">Naruči</button>
+<button onclick="order()">Naruči (WhatsApp)</button>
 </div>
 
-<div class="admin" id="admin" style="display:none;">
-<h3>Admin login</h3>
-<input id="email" placeholder="email">
-<input id="pass" placeholder="password">
+<div class="admin" id="admin">
+<h3>Admin Login</h3>
+<input id="email" placeholder="Email">
+<input id="pass" placeholder="Password">
 <button onclick="login()">Login</button>
 
 <hr>
@@ -64,63 +121,61 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-// 🔴 OVDJE UBACI SVOJ FIREBASE CONFIG
-const firebaseConfig = {
-  
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// 🔴 Tvoj Firebase config (VEĆ UBACEN)
 const firebaseConfig = {
   apiKey: "AIzaSyBo1Hk2jJZ3FDD7lA5ZT0AOR2fZ_VYaaDQ",
   authDomain: "zaza-shop-adf2c.firebaseapp.com",
   projectId: "zaza-shop-adf2c",
-  storageBucket: "zaza-shop-adf2c.firebasestorage.app",
+  storageBucket: "zaza-shop-adf2c.appspot.com",
   messagingSenderId: "481946415513",
-  appId: "1:481946415513:web:34f7e25061077a5816e308",
-  measurementId: "G-JVZPJD5ERF"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+  appId: "1:481946415513:web:34f7e25061077a5816e308"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ===== LOGIN =====
-window.login = async function(){
-    let email = emailInput.value;
-    let pass = passInput.value;
+// DOM
+const productsDiv = document.getElementById("products");
+const itemsDiv = document.getElementById("items");
+const countSpan = document.getElementById("count");
+const totalSpan = document.getElementById("total");
+const cartDiv = document.getElementById("cart");
+const adminDiv = document.getElementById("admin");
 
+const nameInput = document.getElementById("name");
+const addressInput = document.getElementById("address");
+const phoneInput = document.getElementById("phone");
+
+const emailInput = document.getElementById("email");
+const passInput = document.getElementById("pass");
+
+const pname = document.getElementById("pname");
+const pprice = document.getElementById("pprice");
+const pimg = document.getElementById("pimg");
+
+// CART
+let cart = [];
+
+// LOGIN
+window.login = async function(){
     try{
-        await signInWithEmailAndPassword(auth,email,pass);
+        await signInWithEmailAndPassword(auth,emailInput.value,passInput.value);
         alert("Ulogovan si!");
-    }catch{
+    }catch(e){
         alert("Greška login");
     }
 }
 
-// ===== PRODUCTS =====
+// LOAD PRODUCTS
 async function loadProducts(){
     let data = await getDocs(collection(db,"products"));
-    products.innerHTML="";
+    productsDiv.innerHTML="";
 
     data.forEach(doc=>{
         let p = doc.data();
 
-        products.innerHTML += `
+        productsDiv.innerHTML += `
         <div class="product">
         <img src="${p.img}">
         <h3>${p.name}</h3>
@@ -130,38 +185,39 @@ async function loadProducts(){
     });
 }
 
+// ADD PRODUCT
 window.addProduct = async function(){
-    let name = pname.value;
-    let price = parseFloat(pprice.value);
-    let img = pimg.value;
+    await addDoc(collection(db,"products"),{
+        name:pname.value,
+        price:parseFloat(pprice.value),
+        img:pimg.value
+    });
 
-    await addDoc(collection(db,"products"),{name,price,img});
     alert("Dodano!");
     loadProducts();
 }
 
-// ===== CART =====
-let cart = [];
-
+// ADD TO CART
 window.add = function(name,price){
     let item = cart.find(x=>x.name===name);
 
-    if(item){ item.qty++; }
-    else{ cart.push({name,price,qty:1}); }
+    if(item) item.qty++;
+    else cart.push({name,price,qty:1});
 
     update();
 }
 
+// UPDATE CART
 function update(){
-    count.innerText = cart.length;
+    countSpan.innerText = cart.length;
 
     let total = 0;
-    items.innerHTML="";
+    itemsDiv.innerHTML="";
 
     cart.forEach((c,i)=>{
         total += c.price*c.qty;
 
-        items.innerHTML += `
+        itemsDiv.innerHTML += `
         <div>
         ${c.name} (${c.qty})
         <button onclick="change(${i},1)">+</button>
@@ -170,49 +226,50 @@ function update(){
         </div>`;
     });
 
-    totalEl.innerText = total;
+    totalSpan.innerText = total;
 }
 
+// CHANGE QTY
 window.change = function(i,d){
     cart[i].qty += d;
     if(cart[i].qty<=0) cart.splice(i,1);
     update();
 }
 
+// REMOVE ITEM
 window.removeItem = function(i){
     cart.splice(i,1);
     update();
 }
 
+// TOGGLES
 window.toggleCart = function(){
     cartDiv.classList.toggle("active");
 }
 
 window.toggleAdmin = function(){
-    admin.style.display = admin.style.display==="none"?"block":"none";
+    adminDiv.style.display = adminDiv.style.display==="none"?"block":"none";
 }
 
-// ===== ORDER =====
+// ORDER (WHATSAPP + FIREBASE)
 window.order = async function(){
 
-    let name = nameInput.value;
-    let address = addressInput.value;
-    let phone = phoneInput.value;
-
     let total = 0;
-    let msg = "ZAZA NARUDŽBA%0A";
+    let msg = "🧵 ZAZA NARUDŽBA%0A%0A";
 
     cart.forEach(c=>{
-        msg += c.name+" x"+c.qty+"%0A";
+        msg += `${c.name} x${c.qty}%0A`;
         total += c.price*c.qty;
     });
 
-    // FIREBASE SAVE
     await addDoc(collection(db,"orders"),{
-        name,address,phone,cart,total
+        name:nameInput.value,
+        address:addressInput.value,
+        phone:phoneInput.value,
+        cart,
+        total
     });
 
-    // WHATSAPP
     window.open("https://wa.me/3876XXXXXXX?text="+msg);
 
     cart=[];
