@@ -97,187 +97,152 @@ margin:5px 0;
 <input id="address" placeholder="Adresa">
 <input id="phone" placeholder="Telefon">
 
-<button onclick="order()">Naruči (WhatsApp)</button>
+<button onclick="order()">Naruči WhatsApp</button>
 </div>
 
 <div class="admin" id="admin">
-<h3>Admin Login</h3>
-<input id="email" placeholder="Email">
-<input id="pass" placeholder="Password">
-<button onclick="login()">Login</button>
+<h3>Admin (dodaj proizvod)</h3>
 
-<hr>
-
-<h3>Dodaj proizvod</h3>
 <input id="pname" placeholder="Naziv">
 <input id="pprice" placeholder="Cijena">
 <input id="pimg" placeholder="Link slike">
+
 <button onclick="addProduct()">Dodaj</button>
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+// ===== PROIZVODI =====
+let products = [
+{
+name:"Torba handmade",
+price:25,
+img:"https://images.unsplash.com/photo-1590874103328-eac38a683ce7"
+},
+{
+name:"Jastuk dekor",
+price:20,
+img:"https://images.unsplash.com/photo-1582582429416-7a1cfdc9a1d1"
+},
+{
+name:"Torbica",
+price:15,
+img:"https://images.unsplash.com/photo-1600180758890-6b94519a8ba6"
+}
+];
 
-// 🔴 Tvoj Firebase config (VEĆ UBACEN)
-const firebaseConfig = {
-  apiKey: "AIzaSyBo1Hk2jJZ3FDD7lA5ZT0AOR2fZ_VYaaDQ",
-  authDomain: "zaza-shop-adf2c.firebaseapp.com",
-  projectId: "zaza-shop-adf2c",
-  storageBucket: "zaza-shop-adf2c.appspot.com",
-  messagingSenderId: "481946415513",
-  appId: "1:481946415513:web:34f7e25061077a5816e308"
-};
+function renderProducts(){
+let box = document.getElementById("products");
+box.innerHTML="";
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+products.forEach((p,i)=>{
+box.innerHTML += `
+<div class="product">
+<img src="${p.img}">
+<h3>${p.name}</h3>
+<p>${p.price} KM</p>
+<button onclick="add(${i})">Dodaj</button>
+</div>`;
+});
+}
 
-// DOM
-const productsDiv = document.getElementById("products");
-const itemsDiv = document.getElementById("items");
-const countSpan = document.getElementById("count");
-const totalSpan = document.getElementById("total");
-const cartDiv = document.getElementById("cart");
-const adminDiv = document.getElementById("admin");
-
-const nameInput = document.getElementById("name");
-const addressInput = document.getElementById("address");
-const phoneInput = document.getElementById("phone");
-
-const emailInput = document.getElementById("email");
-const passInput = document.getElementById("pass");
-
-const pname = document.getElementById("pname");
-const pprice = document.getElementById("pprice");
-const pimg = document.getElementById("pimg");
-
-// CART
+// ===== KORPA =====
 let cart = [];
 
-// LOGIN
-window.login = async function(){
-    try{
-        await signInWithEmailAndPassword(auth,emailInput.value,passInput.value);
-        alert("Ulogovan si!");
-    }catch(e){
-        alert("Greška login");
-    }
+function add(i){
+let item = cart.find(x=>x.name===products[i].name);
+
+if(item){
+item.qty++;
+}else{
+cart.push({...products[i], qty:1});
 }
 
-// LOAD PRODUCTS
-async function loadProducts(){
-    let data = await getDocs(collection(db,"products"));
-    productsDiv.innerHTML="";
-
-    data.forEach(doc=>{
-        let p = doc.data();
-
-        productsDiv.innerHTML += `
-        <div class="product">
-        <img src="${p.img}">
-        <h3>${p.name}</h3>
-        <p>${p.price} KM</p>
-        <button onclick="add('${p.name}',${p.price})">Dodaj</button>
-        </div>`;
-    });
+update();
 }
 
-// ADD PRODUCT
-window.addProduct = async function(){
-    await addDoc(collection(db,"products"),{
-        name:pname.value,
-        price:parseFloat(pprice.value),
-        img:pimg.value
-    });
-
-    alert("Dodano!");
-    loadProducts();
-}
-
-// ADD TO CART
-window.add = function(name,price){
-    let item = cart.find(x=>x.name===name);
-
-    if(item) item.qty++;
-    else cart.push({name,price,qty:1});
-
-    update();
-}
-
-// UPDATE CART
 function update(){
-    countSpan.innerText = cart.length;
+document.getElementById("count").innerText = cart.length;
 
-    let total = 0;
-    itemsDiv.innerHTML="";
+let items = document.getElementById("items");
+items.innerHTML="";
 
-    cart.forEach((c,i)=>{
-        total += c.price*c.qty;
+let total = 0;
 
-        itemsDiv.innerHTML += `
-        <div>
-        ${c.name} (${c.qty})
-        <button onclick="change(${i},1)">+</button>
-        <button onclick="change(${i},-1)">-</button>
-        <button onclick="removeItem(${i})">X</button>
-        </div>`;
-    });
+cart.forEach((c,i)=>{
+total += c.price*c.qty;
 
-    totalSpan.innerText = total;
+items.innerHTML += `
+<div>
+${c.name} (${c.qty})
+<button onclick="change(${i},1)">+</button>
+<button onclick="change(${i},-1)">-</button>
+<button onclick="removeItem(${i})">X</button>
+</div>`;
+});
+
+document.getElementById("total").innerText = total;
 }
 
-// CHANGE QTY
-window.change = function(i,d){
-    cart[i].qty += d;
-    if(cart[i].qty<=0) cart.splice(i,1);
-    update();
+function change(i,d){
+cart[i].qty += d;
+if(cart[i].qty<=0) cart.splice(i,1);
+update();
 }
 
-// REMOVE ITEM
-window.removeItem = function(i){
-    cart.splice(i,1);
-    update();
+function removeItem(i){
+cart.splice(i,1);
+update();
 }
 
-// TOGGLES
-window.toggleCart = function(){
-    cartDiv.classList.toggle("active");
+// ===== ADMIN =====
+function toggleAdmin(){
+let a = document.getElementById("admin");
+a.style.display = a.style.display==="none"?"block":"none";
 }
 
-window.toggleAdmin = function(){
-    adminDiv.style.display = adminDiv.style.display==="none"?"block":"none";
+function addProduct(){
+let name = document.getElementById("pname").value;
+let price = parseFloat(document.getElementById("pprice").value);
+let img = document.getElementById("pimg").value;
+
+products.push({name,price,img});
+renderProducts();
+alert("Dodano!");
 }
 
-// ORDER (WHATSAPP + FIREBASE)
-window.order = async function(){
+// ===== CART =====
+function toggleCart(){
+document.getElementById("cart").classList.toggle("active");
+}
 
-    let total = 0;
-    let msg = "🧵 ZAZA NARUDŽBA%0A%0A";
+// ===== WHATSAPP ORDER =====
+function order(){
 
-    cart.forEach(c=>{
-        msg += `${c.name} x${c.qty}%0A`;
-        total += c.price*c.qty;
-    });
+if(cart.length===0){
+alert("Korpa je prazna!");
+return;
+}
 
-    await addDoc(collection(db,"orders"),{
-        name:nameInput.value,
-        address:addressInput.value,
-        phone:phoneInput.value,
-        cart,
-        total
-    });
+let msg="ZAZA NARUDŽBA%0A%0A";
+let total=0;
 
-    window.open("https://wa.me/3876XXXXXXX?text="+msg);
+cart.forEach(c=>{
+msg += c.name+" x"+c.qty+"%0A";
+total += c.price*c.qty;
+});
 
-    cart=[];
-    update();
+msg += "%0AUKUPNO: "+total+" KM";
+
+window.open("https://wa.me/3876XXXXXXX?text="+msg,"_blank");
+
+cart=[];
+update();
 }
 
 // INIT
-loadProducts();
+renderProducts();
+update();
 
 </script>
 
